@@ -39,11 +39,11 @@ namespace NZWalks.API.Controllers
 
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult GetById([FromRoute]Guid id)
+        public IActionResult GetById([FromRoute] Guid id)
         {
             var regionDomain = dbContext.Regions.FirstOrDefault(x => x.Id == id);
 
-            if(regionDomain == null)
+            if (regionDomain == null)
             {
                 return NotFound();
             }
@@ -59,7 +59,7 @@ namespace NZWalks.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody]AddRegionRequestDto addRegionRequestDto)
+        public IActionResult Create([FromBody] AddRegionRequestDto addRegionRequestDto)
         {
             var regionDomainModel = new Region
             {
@@ -78,7 +78,51 @@ namespace NZWalks.API.Controllers
                 RegionImageUrl = regionDomainModel.RegionImageUrl
             };
 
-            return CreatedAtAction(nameof(GetById),new { id = regionDto.Id },regionDto);
+            return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+        }
+
+        [HttpPut]
+        public IActionResult Put([FromBody] RegionDto regionDto)
+        {
+            if (regionDto == null)
+                return BadRequest();
+
+            var existingRecord = dbContext.Regions.Where(r => r.Id == regionDto.Id).FirstOrDefault();
+
+            if (existingRecord == null)
+                return NotFound();
+
+            existingRecord.Name = regionDto.Name;
+            existingRecord.Code = regionDto.Code;
+            existingRecord.RegionImageUrl = regionDto.RegionImageUrl;
+
+            Region regionDomain = new Region
+            {
+                Id = existingRecord.Id,
+                Name = existingRecord.Name,
+                Code= existingRecord.Code,
+                RegionImageUrl = existingRecord.RegionImageUrl
+            };
+
+            dbContext.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:Guid}")]
+        public IActionResult Delete([FromRoute] Guid id)
+        {
+            var regionDomain = dbContext.Regions.FirstOrDefault(x => x.Id == id);
+
+            if (regionDomain == null)
+            {
+                return NotFound();
+            }
+
+            dbContext.Regions.Remove(regionDomain);
+            dbContext.SaveChanges();
+
+            return NoContent();
         }
     }
 }
