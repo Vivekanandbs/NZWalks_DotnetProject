@@ -1,6 +1,8 @@
 
 using Microsoft.EntityFrameworkCore;
 using NZWalks.API.Data;
+using NZWalks.API.IRepository;
+using NZWalks.API.Repository;
 
 namespace NZWalks.API
 {
@@ -12,13 +14,15 @@ namespace NZWalks.API
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddNewtonsoftJson();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<NZWalksContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("NZWalksConnectionString")));
+
+            builder.Services.AddTransient<IDifficultyRepo, DifficultyRepo>();
 
             var app = builder.Build();
 
