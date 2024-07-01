@@ -22,7 +22,9 @@ namespace NZWalks.API
             builder.Services.AddDbContext<NZWalksContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("NZWalksConnectionString")));
 
-            builder.Services.AddTransient<IDifficultyRepo, DifficultyRepo>();
+            builder.Services.AddScoped<IDifficultyRepo, DifficultyRepo>();
+            builder.Services.AddScoped<IRegionRepo, RegionRepo>();
+            builder.Services.AddScoped(typeof(INzWalksRepo<>), typeof(NzWalksRepo<>));
 
             var app = builder.Build();
 

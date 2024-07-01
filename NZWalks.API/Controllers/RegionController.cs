@@ -10,9 +10,9 @@ namespace NZWalks.API.Controllers
     [ApiController]
     public class RegionController : ControllerBase
     {
-        private readonly IRegionRepo _regionRepo;
+        private readonly INzWalksRepo<Region> _regionRepo;
 
-        public RegionController(IRegionRepo regionRepo)
+        public RegionController(INzWalksRepo<Region> regionRepo)
         {
             _regionRepo = regionRepo;
         }
@@ -43,12 +43,10 @@ namespace NZWalks.API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var regionDomain = await _regionRepo.GetByIdAsync(id);
+            var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
 
             if (regionDomain == null)
-            {
                 return NotFound();
-            }
 
             var regionDto = new RegionDto
             {
@@ -63,9 +61,14 @@ namespace NZWalks.API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Create(AddRegionRequestDto addRegionRequestDto)
         {
+            if (addRegionRequestDto.Name.Length == 0)
+                return BadRequest("Name Field should have atleast one charecter");
+            if (addRegionRequestDto.Code.Length == 0)
+                return BadRequest("Region Code is required");
+
             var regionDomainModel = new Region
             {
-                Code = addRegionRequestDto.Code,
+                Code = addRegionRequestDto.Code.ToUpper(),
                 Name = addRegionRequestDto.Name,
                 RegionImageUrl = addRegionRequestDto.RegionImageUrl
             };
@@ -89,7 +92,7 @@ namespace NZWalks.API.Controllers
             if (regionDto == null)
                 return BadRequest();
 
-            var existingRecord = await _regionRepo.GetByIdAsync(regionDto.Id);
+            var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == regionDto.Id);
 
             if (existingRecord == null)
                 return NotFound();
@@ -104,12 +107,12 @@ namespace NZWalks.API.Controllers
         }
 
         [HttpPatch("[action]")]
-        public async Task<IActionResult> UpdatePartial(Guid id, [FromBody]  JsonPatchDocument<RegionDto> patchDocument)
+        public async Task<IActionResult> UpdatePartial(Guid id, JsonPatchDocument<RegionDto> patchDocument)
         {
             if(patchDocument == null)
                 return BadRequest();
 
-            var existingRecord = await _regionRepo.GetByIdAsync(id);
+            var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == id);
 
             if (existingRecord == null)
                 return NotFound();
@@ -137,14 +140,12 @@ namespace NZWalks.API.Controllers
         }
 
         [HttpDelete("[action]")]
-        public async Task<IActionResult> Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var regionDomain = await _regionRepo.GetByIdAsync(id);
+            var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
 
             if (regionDomain == null)
-            {
                 return NotFound();
-            }
 
             await _regionRepo.DeleteAsync(regionDomain);
 

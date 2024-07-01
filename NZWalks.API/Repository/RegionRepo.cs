@@ -3,6 +3,10 @@ using NZWalks.API.Data;
 using NZWalks.API.Entities;
 using NZWalks.API.IRepository;
 
+/*  This Repo is now unused. I have created a Common Repo for the controllers(NzWalksRepo).
+    I am keeping this Repo for the future reference, how we can use common Repo instead of 
+    individual Repos for the controllers    */
+
 namespace NZWalks.API.Repository
 {
     public class RegionRepo : IRegionRepo

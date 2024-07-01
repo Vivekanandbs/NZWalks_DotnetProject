@@ -10,8 +10,8 @@ namespace NZWalks.API.Controllers
     [ApiController]
     public class DifficultiesController : Controller
     {
-        private readonly IDifficultyRepo _difficultyRepo;
-        public DifficultiesController(IDifficultyRepo difficultyRepo)
+        private readonly INzWalksRepo<Difficulty> _difficultyRepo;
+        public DifficultiesController(INzWalksRepo<Difficulty> difficultyRepo)
         {
             _difficultyRepo = difficultyRepo;
         }
@@ -37,7 +37,7 @@ namespace NZWalks.API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var difficultyDomain = await _difficultyRepo.GetByIdAsync(id);
+            var difficultyDomain = await _difficultyRepo.GetByIdAsync(difficulty => difficulty.Id == id);
 
             if (difficultyDomain == null)
                 return NotFound();
@@ -57,7 +57,7 @@ namespace NZWalks.API.Controllers
             if (difficultyDto == null)
                 return BadRequest();
 
-            var existingRecord = await _difficultyRepo.GetByIdAsync(difficultyDto.Id);
+            var existingRecord = await _difficultyRepo.GetByIdAsync(difficulty => difficulty.Id == difficultyDto.Id);
 
             if (existingRecord == null)
                 return NotFound();
@@ -91,7 +91,7 @@ namespace NZWalks.API.Controllers
         [HttpDelete("[action]")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var difficultyDomain = await _difficultyRepo.GetByIdAsync(id);
+            var difficultyDomain = await _difficultyRepo.GetByIdAsync(difficulty => difficulty.Id == id);
 
             if (difficultyDomain == null)
                 return NotFound();
