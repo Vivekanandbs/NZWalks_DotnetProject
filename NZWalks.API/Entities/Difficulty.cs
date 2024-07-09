@@ -12,5 +12,8 @@ namespace NZWalks.API.Entities
 
         [Column("name")]
         public string Name { get; set; }
+
+        [InverseProperty("Difficulty")]
+        public virtual ICollection<Walk> Walk { get; set; }
     }
 }

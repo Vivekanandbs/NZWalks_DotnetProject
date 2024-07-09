@@ -3,153 +3,220 @@ using Microsoft.AspNetCore.Mvc;
 using NZWalks.API.Entities;
 using NZWalks.API.IRepository;
 using NZWalks.API.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Net;
 
 namespace NZWalks.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Superadmin,Admin")]
     public class RegionController : ControllerBase
     {
         private readonly INzWalksRepo<Region> _regionRepo;
+        private APIResponse _apiResponse;
 
         public RegionController(INzWalksRepo<Region> regionRepo)
         {
             _regionRepo = regionRepo;
+            _apiResponse = new APIResponse();
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<APIResponse>> GetAll()
         {
-            var regionsDomain = await _regionRepo.GetAllAsync();
-
-            if(regionsDomain.Count() == 0)
-                return NotFound();
-
-            var regionDto = new List<RegionDto>();
-            foreach (var regionDomain in regionsDomain)
+            try
             {
-                regionDto.Add(new RegionDto()
-                {
-                    Id = regionDomain.Id,
-                    Name = regionDomain.Name,
-                    Code = regionDomain.Code,
-                    RegionImageUrl = regionDomain.RegionImageUrl
-                });
-            }
+                var regionsDomain = await _regionRepo.GetAllAsync();
 
-            return Ok(regionDto);
+                if (regionsDomain.Count() == 0)
+                    return NotFound();
+
+                _apiResponse.Data = regionsDomain;
+                _apiResponse.Status = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+
+                return Ok(_apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+
+                return _apiResponse;
+            }
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetById(Guid id)
+        public async Task<ActionResult<APIResponse>> GetById(Guid id)
         {
-            var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
-
-            if (regionDomain == null)
-                return NotFound();
-
-            var regionDto = new RegionDto
+            try
             {
-                Id = regionDomain.Id,
-                Name = regionDomain.Name,
-                Code = regionDomain.Code,
-                RegionImageUrl = regionDomain.RegionImageUrl
-            };
-            return Ok(regionDto);
+                var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
+
+                if (regionDomain == null)
+                    return NotFound();
+
+                _apiResponse.Data = regionDomain;
+                _apiResponse.Status = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+
+                return Ok(_apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+
+                return _apiResponse;
+            }
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Create(AddRegionRequestDto addRegionRequestDto)
+        public async Task<ActionResult<APIResponse>> Create(AddRegionRequestDto addRegionRequestDto)
         {
-            if (addRegionRequestDto.Name.Length == 0)
-                return BadRequest("Name Field should have atleast one charecter");
-            if (addRegionRequestDto.Code.Length == 0)
-                return BadRequest("Region Code is required");
-
-            var regionDomainModel = new Region
+            try
             {
-                Code = addRegionRequestDto.Code.ToUpper(),
-                Name = addRegionRequestDto.Name,
-                RegionImageUrl = addRegionRequestDto.RegionImageUrl
-            };
-            
-            await _regionRepo.CreateAsync(regionDomainModel);
+                if (addRegionRequestDto.Name.Length == 0)
+                    return BadRequest("Name Field should have atleast one charecter");
+                if (addRegionRequestDto.Code.Length == 0)
+                    return BadRequest("Region Code is required");
 
-            var regionDto = new RegionDto
+                var regionDomainModel = new Region
+                {
+                    Code = addRegionRequestDto.Code.ToUpper(),
+                    Name = addRegionRequestDto.Name,
+                    RegionImageUrl = addRegionRequestDto.RegionImageUrl
+                };
+
+                await _regionRepo.CreateAsync(regionDomainModel);
+
+                var regionDto = new RegionDto
+                {
+                    Id = regionDomainModel.Id,
+                    Name = regionDomainModel.Name,
+                    Code = regionDomainModel.Code,
+                    RegionImageUrl = regionDomainModel.RegionImageUrl
+                };
+
+                _apiResponse.Data = regionDto;
+                _apiResponse.Status = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+
+                return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, _apiResponse);
+            }
+            catch (Exception ex)
             {
-                Id = regionDomainModel.Id,
-                Name = regionDomainModel.Name,
-                Code = regionDomainModel.Code,
-                RegionImageUrl = regionDomainModel.RegionImageUrl
-            };
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
 
-            return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+                return _apiResponse;
+            }
         }
 
         [HttpPut("[action]")]
-        public async Task<IActionResult> Update(RegionDto regionDto)
+        public async Task<ActionResult<APIResponse>> Update(RegionDto regionDto)
         {
-            if (regionDto == null)
-                return BadRequest();
+            try
+            {
+                if (regionDto == null)
+                    return BadRequest();
 
-            var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == regionDto.Id);
+                var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == regionDto.Id);
 
-            if (existingRecord == null)
-                return NotFound();
+                if (existingRecord == null)
+                    return NotFound();
 
-            existingRecord.Name = regionDto.Name;
-            existingRecord.Code = regionDto.Code;
-            existingRecord.RegionImageUrl = regionDto.RegionImageUrl;
+                existingRecord.Name = regionDto.Name;
+                existingRecord.Code = regionDto.Code;
+                existingRecord.RegionImageUrl = regionDto.RegionImageUrl;
 
-            await _regionRepo.UpdateAsync(existingRecord);
+                await _regionRepo.UpdateAsync(existingRecord);
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+
+                return _apiResponse;
+            }
         }
 
         [HttpPatch("[action]")]
-        public async Task<IActionResult> UpdatePartial(Guid id, JsonPatchDocument<RegionDto> patchDocument)
+        public async Task<ActionResult<APIResponse>> UpdatePartial(Guid id, JsonPatchDocument<RegionDto> patchDocument)
         {
-            if(patchDocument == null)
-                return BadRequest();
-
-            var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == id);
-
-            if (existingRecord == null)
-                return NotFound();
-
-            var regionsDto = new RegionDto
+            try
             {
-                Id = existingRecord.Id,
-                Name = existingRecord.Name,
-                Code = existingRecord.Code,
-                RegionImageUrl = existingRecord.RegionImageUrl
-            };
+                if (patchDocument == null)
+                    return BadRequest();
 
-            patchDocument.ApplyTo(regionsDto, ModelState);
+                var existingRecord = await _regionRepo.GetByIdAsync(region => region.Id == id);
 
-            if(!ModelState.IsValid)
-                return BadRequest(ModelState);
+                if (existingRecord == null)
+                    return NotFound();
 
-            existingRecord.Name = regionsDto.Name;
-            existingRecord.Code = regionsDto.Code;
-            existingRecord.RegionImageUrl = regionsDto.RegionImageUrl;
-            
-            await _regionRepo.UpdatePartialAsync(existingRecord);
+                var regionsDto = new RegionDto
+                {
+                    Id = existingRecord.Id,
+                    Name = existingRecord.Name,
+                    Code = existingRecord.Code,
+                    RegionImageUrl = existingRecord.RegionImageUrl
+                };
 
-            return NoContent();
+                patchDocument.ApplyTo(regionsDto, ModelState);
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                existingRecord.Name = regionsDto.Name;
+                existingRecord.Code = regionsDto.Code;
+                existingRecord.RegionImageUrl = regionsDto.RegionImageUrl;
+
+                await _regionRepo.UpdatePartialAsync(existingRecord);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+
+                return _apiResponse;
+            }
         }
 
         [HttpDelete("[action]")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<ActionResult<APIResponse>> Delete(Guid id)
         {
-            var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
+            try
+            {
+                var regionDomain = await _regionRepo.GetByIdAsync(region => region.Id == id);
 
-            if (regionDomain == null)
-                return NotFound();
+                if (regionDomain == null)
+                    return NotFound();
 
-            await _regionRepo.DeleteAsync(regionDomain);
+                await _regionRepo.DeleteAsync(regionDomain);
+                _apiResponse.Data = true;
+                _apiResponse.Status = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
 
-            return NoContent();
+                return Ok(_apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _apiResponse.Errors.Add(ex.Message);
+                _apiResponse.Status = false;
+                _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+
+                return _apiResponse;
+            }
         }
     }
 }

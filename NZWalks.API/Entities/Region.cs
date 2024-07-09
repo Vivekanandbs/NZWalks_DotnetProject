@@ -18,5 +18,8 @@ namespace NZWalks.API.Entities
 
         [Column("region_image_url")]
         public string? RegionImageUrl { get; set; }
+
+        [InverseProperty("Region")]
+        public virtual ICollection<Walk> Walk { get; set; }
     }
 }

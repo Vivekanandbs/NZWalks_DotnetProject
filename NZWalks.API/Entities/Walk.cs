@@ -23,13 +23,17 @@ namespace NZWalks.API.Entities
         public string? WalkImageUrl { get; set; }
 
         [Column("difficulty_id")]
-        public Guid DifficultyId { get; set; }
+        public Guid? DifficultyId { get; set; }
+
+        [ForeignKey(nameof(DifficultyId))]
+        [InverseProperty("Walk")]
+        public Difficulty? Difficulty { get; set; }
 
         [Column("region_id")]
-        public Guid RegionId { get; set; }
+        public Guid? RegionId { get; set; }
 
-        //Navigation peoperty
-        public Difficulty Difficulty { get; set; }
-        public Region Region { get; set; }
+        [ForeignKey(nameof(RegionId))]
+        [InverseProperty("Walk")]
+        public Region? Region { get; set; }
     }
 }

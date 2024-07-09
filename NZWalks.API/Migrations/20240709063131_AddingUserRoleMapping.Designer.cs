@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NZWalks.API.Data;
 
@@ -11,9 +12,11 @@ using NZWalks.API.Data;
 namespace NZWalks.API.Migrations
 {
     [DbContext(typeof(NZWalksContext))]
-    partial class NZWalksContextModelSnapshot : ModelSnapshot
+    [Migration("20240709063131_AddingUserRoleMapping")]
+    partial class AddingUserRoleMapping
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,13 +188,11 @@ namespace NZWalks.API.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("user_name");
 
-                    b.Property<int>("UserTypeId")
+                    b.Property<int>("UserType")
                         .HasColumnType("int")
-                        .HasColumnName("user_type_id");
+                        .HasColumnName("user_type");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserTypeId");
 
                     b.ToTable("User");
                 });
@@ -218,30 +219,6 @@ namespace NZWalks.API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("userRoleMapping");
-                });
-
-            modelBuilder.Entity("NZWalks.API.Entities.UserType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserType");
                 });
 
             modelBuilder.Entity("NZWalks.API.Entities.Walk", b =>
@@ -293,17 +270,6 @@ namespace NZWalks.API.Migrations
                         .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("NZWalks.API.Entities.User", b =>
-                {
-                    b.HasOne("NZWalks.API.Entities.UserType", "UserType")
-                        .WithMany("User")
-                        .HasForeignKey("UserTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("UserType");
                 });
 
             modelBuilder.Entity("NZWalks.API.Entities.UserRoleMapping", b =>
@@ -360,11 +326,6 @@ namespace NZWalks.API.Migrations
             modelBuilder.Entity("NZWalks.API.Entities.User", b =>
                 {
                     b.Navigation("UserRoleMapping");
-                });
-
-            modelBuilder.Entity("NZWalks.API.Entities.UserType", b =>
-                {
-                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

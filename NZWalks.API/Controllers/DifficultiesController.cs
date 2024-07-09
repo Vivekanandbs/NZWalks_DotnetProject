@@ -2,12 +2,14 @@
 using NZWalks.API.Models;
 using NZWalks.API.Entities;
 using NZWalks.API.IRepository;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace NZWalks.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Superadmin,Admin")]
     public class DifficultiesController : Controller
     {
         private readonly INzWalksRepo<Difficulty> _difficultyRepo;
